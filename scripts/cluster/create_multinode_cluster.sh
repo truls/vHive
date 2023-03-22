@@ -22,7 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-STOCK_CONTAINERD=$1
+set -euo pipefail
+
+STOCK_CONTAINERD=${1:-}
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
@@ -34,7 +36,8 @@ Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --runtime-request-tim
 EOF'
 sudo systemctl daemon-reload
 
-sudo kubeadm init --ignore-preflight-errors=all --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
+#sudo kubeadm init --ignore-preflight-errors=all --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
+sudo kubeadm init --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16 --control-plane-endpoint 10.0.1.2 --apiserver-advertise-address 10.0.1.2
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config

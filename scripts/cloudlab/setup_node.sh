@@ -22,12 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+set -xeuo pipefail
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
 SCRIPTS=$ROOT/scripts
 
-SANDBOX=$1
-USE_STARGZ=$2
+SANDBOX=${1:-}
+USE_STARGZ=${2:-}
 
 if [ -z "$SANDBOX" ]; then
     SANDBOX="firecracker"

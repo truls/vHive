@@ -46,18 +46,26 @@ sudo apt-get -y install \
     git-lfs >> /dev/null
 
 # stack size, # of open files, # of pids
-sudo sh -c "echo \"* soft nofile 1000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"* hard nofile 1000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root soft nofile 1000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root hard nofile 1000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"* soft nproc 4000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"* hard nproc 4000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root soft nproc 4000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root hard nproc 4000000\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"* soft stack 65536\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"* hard stack 65536\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root soft stack 65536\" >> /etc/security/limits.conf"
-sudo sh -c "echo \"root hard stack 65536\" >> /etc/security/limits.conf"
+
+if grep -q VHIVE /etc/security/limits.conf; then
+	sudo sh -c "
+	cat << EOF >> /etc/security/limits.conf
+# BEGIN VHIVE VALUES
+* soft nofile 1000000
+* hard nofile 1000000
+root soft nofile 1000000
+root hard nofile 1000000
+* soft nproc 4000000
+* hard nproc 4000000
+root soft nproc 4000000
+root hard nproc 4000000
+* soft stack 65536
+* hard stack 65536
+root soft stack 65536
+root hard stack 65536
+# END VHIVE VALUES
+EOF"
+fi
 
 sudo sysctl --quiet -w net.ipv4.conf.all.forwarding=1
 # Avoid "neighbour: arp_cache: neighbor table overflow!"

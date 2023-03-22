@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+set -xeuo pipefail
+
 sudo apt-get update >> /dev/null
 
 sudo apt-get -y install btrfs-progs pkg-config libseccomp-dev unzip tar libseccomp2 socat util-linux apt-transport-https curl ipvsadm >> /dev/null
@@ -49,16 +51,24 @@ K8S_VERSION=1.25.3-00
 sudo sh -c "echo 'deb [trusted=yes] http://apt.kubernetes.io/ kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list"
 sudo apt-get update >> /dev/null
 sudo apt-get -y install cri-tools ebtables ethtool kubeadm=$K8S_VERSION kubectl=$K8S_VERSION kubelet=$K8S_VERSION kubernetes-cni >> /dev/null
+sudo apt-mark hold kubeadm kubectl kubelet
 
 # Install knative CLI
 KNATIVE_VERSION="release-1.9"
 git clone --quiet --depth=1 --branch=$KNATIVE_VERSION -c advice.detachedHead=false https://github.com/knative/client.git $HOME/client
+
 cd $HOME/client
+# Required by build.sh script
+sudo apt-get install -y file
 hack/build.sh -f
 sudo mv kn /usr/local/bin
 
 
 # Necessary for containerd as container runtime but not docker
+sudo tee /etc/modules-load.d/vhive.conf <<EOF
+overlay
+br_netfilter
+EOF
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
