@@ -22,16 +22,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-STOCK_CONTAINERD=$1
+set -euo pipefail
+
+STOCK_CONTAINERD=${1:-}
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( cd "$DIR" && cd .. && cd .. && pwd)"
+
 
 if [ "$STOCK_CONTAINERD" == "stock-only" ]; then
     CRI_SOCK="/run/containerd/containerd.sock"
 else
     CRI_SOCK="/etc/vhive-cri/vhive-cri.sock"
 fi
+
 # Create kubelet service
-sudo sh -c 'cat <<EOF > /etc/systemd/system/kubelet.service.d/0-containerd.conf
-[Service]                                                 
+cat << EOF | sudo sh -c 'cat > /etc/systemd/system/kubelet.service.d/0-containerd.conf'
+[Service]
 Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix://'${CRI_SOCK}'"
-EOF'
+EOF
+
+vhive_bin="${ROOT}/vhive"
+
+cat << EOF | sudo sh -c 'cat > /etc/systemd/system/vhive@.service'
+[Unit]
+Description=vhive runtime
+After=network.target local-fs.target firecracker-continerd
+
+[Service]
+ExecStartPre=sh -c "ip link set down br0; ip link set down br1; brctl delbr br0; brctl delbr br1 || true"
+ExecStartPre=sh -c "rm /etc/vhive-cri/vhive-cri.sock || true"
+ExecStart=sh -c "case "%I" in nosnaps) exec $vhive_bin ;; snaps) exec $vhive_bin -snapshots ;; upf) exec $vhive_bin -snapshots -upf ;; *) echo Invalid mode %I; exit 1 ;; esac"
+Type=simple
+Delegate=yes
+KillMode=process
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 sudo systemctl daemon-reload
+sudo systemctl enable --now vhive\@nosnaps

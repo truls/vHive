@@ -30,18 +30,26 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
 
 # Create kubelet service
-sudo sh -c 'cat <<EOF > /etc/systemd/system/kubelet.service.d/0-containerd.conf
-[Service]                                                 
+cat <<EOF | sudo sh -c 'cat > /etc/systemd/system/kubelet.service.d/0-containerd.conf'
+[Service]
 Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock"
-EOF'
+EOF
+
+# Fix kubelet cannot find cgroup error in logs
+cat <<EOF | sudo sh -c 'cat > /etc/systemd/system/kubelet.service.d/11-cgroups.conf'
+[Service]
+CPUAccounting=true
+MemoryAccounting=true
+EOF
+
 sudo systemctl daemon-reload
 
 #sudo kubeadm init --ignore-preflight-errors=all --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
 sudo kubeadm init --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16 --control-plane-endpoint 10.0.1.2 --apiserver-advertise-address 10.0.1.2
 
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p "$HOME/.kube"
+sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
+sudo chown "$(id -u)":"$(id -g)" "$HOME/.kube/config"
 
 # Wait until all workers are connected
 while true; do
@@ -53,4 +61,4 @@ while true; do
     esac
 done
 
-$DIR/setup_master_node.sh $STOCK_CONTAINERD
+$DIR/setup_master_node.sh "$STOCK_CONTAINERD"

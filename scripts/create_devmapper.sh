@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 sudo mkdir -p /var/lib/firecracker-containerd/snapshotter/devmapper
 
 pushd /var/lib/firecracker-containerd/snapshotter/devmapper > /dev/null
@@ -11,7 +13,7 @@ POOL=fc-dev-thinpool
 CONTAINERID=$(basename $(cat /proc/1/cpuset))
 
 # Docker container ID is 64 characters long.
-if [ 64 -eq ${#CONTAINERID} ]; then
+if [ 64 -eq "${#CONTAINERID}" ]; then
     POOL="${CONTAINERID}_thinpool"
 fi
 
@@ -41,9 +43,9 @@ LENGTH_SECTORS=$(bc <<< "${DATASIZE}/${SECTORSIZE}")
 DATA_BLOCK_SIZE=128
 LOW_WATER_MARK=32768
 THINP_TABLE="0 ${LENGTH_SECTORS} thin-pool ${METADEV} ${DATADEV} ${DATA_BLOCK_SIZE} ${LOW_WATER_MARK} 1 skip_block_zeroing"
-echo "${THINP_TABLE}"
+#echo "${THINP_TABLE}"
 
-if ! $(sudo dmsetup reload "${POOL}" --table "${THINP_TABLE}"); then
+if ! sudo dmsetup reload "${POOL}" --table "${THINP_TABLE}" 2> /dev/null; then
     sudo dmsetup create "${POOL}" --table "${THINP_TABLE}"
 fi
 

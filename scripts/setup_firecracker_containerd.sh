@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set -e
+set -euo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT="$( cd $DIR && cd .. && pwd)"
@@ -32,6 +32,8 @@ CONFIGS=$ROOT/configs/firecracker-containerd
 sudo mkdir -p /etc/firecracker-containerd
 sudo mkdir -p /var/lib/firecracker-containerd/runtime
 sudo mkdir -p /etc/containerd/
+
+sudo systemctl stop firecracker-containerd 2> /dev/null || true
 
 cd $ROOT
 git lfs pull
@@ -60,3 +62,33 @@ if [ 64 -eq ${#CONTAINERID} ]; then
 fi
 
 sudo cp $CONFIGS/firecracker-runtime.json /etc/containerd/
+
+cat << EOF | sudo sh -c "cat > /etc/systemd/system/firecracker-containerd.service"
+[Unit]
+Description=firecracker-containerd runtime
+After=network.target local-fs.target containerd vhive-devmapper
+
+[Service]
+ExecStart=/usr/local/bin/firecracker-containerd
+
+Type=simple
+Delegate=yes
+KillMode=process
+Restart=always
+RestartSec=5
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
+LimitNPROC=infinity
+LimitCORE=infinity
+LimitNOFILE=infinity
+# Comment TasksMax if your systemd version does not supports it.
+# Only systemd 226 and above support this version.
+TasksMax=infinity
+OOMScoreAdjust=-999
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now firecracker-containerd
