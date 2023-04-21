@@ -47,6 +47,8 @@ $SCRIPTS/setup_system.sh
 
 sudo mkdir -p /etc/vhive-cri
 
+$SCRIPTS/install_stock.sh
+
 if [ "$SANDBOX" == "firecracker" ]; then
     sudo install -m755 $SCRIPTS/create_devmapper.sh /usr/local/bin/vhive_setup_devmapper.sh
     cat << EOF | sudo sh -c "cat > /etc/systemd/system/vhive-devmapper.service"
@@ -70,9 +72,6 @@ fi
 if [ "$SANDBOX" == "gvisor" ]; then
     $SCRIPTS/setup_gvisor_containerd.sh
 fi
-
-$SCRIPTS/install_stock.sh
-
 
 if [ "$USE_STARGZ" == "use-stargz" ]; then
     $SCRIPTS/stargz/setup_stargz.sh
