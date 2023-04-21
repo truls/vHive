@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set -e
+set -euo pipefail
 
 wget --continue --quiet https://golang.org/dl/go1.18.linux-amd64.tar.gz
 
@@ -30,4 +30,9 @@ sudo tar -C /usr/local -xzf go1.18.linux-amd64.tar.gz
 
 export PATH=$PATH:/usr/local/go/bin
 
-sudo sh -c  "echo 'export PATH=\$PATH:/usr/local/go/bin' >> /etc/profile"
+envfiles="/etc/profile /etc/zsh/zshenv"
+for e in $envfiles; do
+    if [ -f "$e" ] && ! grep -q "go/bin" "$e"; then
+        sudo sh -c "echo 'export PATH=\$PATH:/usr/local/go/bin' >> $e"
+    fi
+done
