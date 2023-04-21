@@ -53,7 +53,7 @@ sudo chown "$(id -u)":"$(id -g)" "$HOME/.kube/config"
 
 # Wait until all workers are connected
 while true; do
-    read -p "All nodes need to be joined in the cluster. Have you joined all nodes? (y/n): " yn
+    read -rp "All nodes need to be joined in the cluster. Have you joined all nodes? (y/n): " yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) continue;;
@@ -61,4 +61,4 @@ while true; do
     esac
 done
 
-$DIR/setup_master_node.sh "$STOCK_CONTAINERD"
+"$DIR"/setup_master_node.sh "$STOCK_CONTAINERD"

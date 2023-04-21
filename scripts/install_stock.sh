@@ -36,7 +36,7 @@ containerd_version=1.6.2
 wget --continue --quiet https://github.com/containerd/containerd/releases/download/v$containerd_version/containerd-${containerd_version}-linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf containerd-${containerd_version}-linux-amd64.tar.gz
 wget --quiet https://raw.githubusercontent.com/containerd/containerd/v${containerd_version}/containerd.service -O - | \
-	sudo sh -c "cat > /etc/systemd/system/containerd.service"
+    sudo sh -c "cat > /etc/systemd/system/containerd.service"
 sudo systemctl daemon-reload
 sudo systemctl enable --now containerd
 
@@ -62,9 +62,9 @@ sudo apt-mark hold kubeadm kubectl kubelet
 
 # Install knative CLI
 KNATIVE_VERSION="release-1.9"
-git clone --quiet --depth=1 --branch=$KNATIVE_VERSION -c advice.detachedHead=false https://github.com/knative/client.git $HOME/client
+git clone --quiet --depth=1 --branch=$KNATIVE_VERSION -c advice.detachedHead=false https://github.com/knative/client.git "$HOME/client"
 
-cd $HOME/client
+cd "$HOME/client"
 # Required by build.sh script
 sudo apt-get install -y file
 hack/build.sh -f
