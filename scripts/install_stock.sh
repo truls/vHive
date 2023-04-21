@@ -48,7 +48,9 @@ wget --continue --quiet https://storage.googleapis.com/gvisor/releases/release/2
 sudo chmod a+rx runsc
 sudo mv runsc /usr/local/bin
 
-containerd --version || echo "failed to build containerd"
+containerd --version || {
+    echo "failed to build containerd";
+    exit 1; }
 
 
 # Install k8s
