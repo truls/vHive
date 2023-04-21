@@ -45,7 +45,8 @@ EOF
 sudo systemctl daemon-reload
 
 #sudo kubeadm init --ignore-preflight-errors=all --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
-sudo kubeadm init --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16 --control-plane-endpoint 10.0.1.2 --apiserver-advertise-address 10.0.1.2
+sudo kubeadm init --cri-socket /run/containerd/containerd.sock --pod-network-cidr=192.168.0.0/16
+#--control-plane-endpoint 10.0.1.2 --apiserver-advertise-address 10.0.1.2
 
 mkdir -p "$HOME/.kube"
 sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
