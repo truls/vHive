@@ -42,9 +42,13 @@ cat << EOF | sudo sh -c 'cat > /etc/systemd/system/kubelet.service.d/0-container
 Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix://'${CRI_SOCK}'"
 EOF
 
-vhive_bin="${ROOT}/vhive"
+if ! [ "$STOCK_CONTAINERD" == "stock-only" ]; then
 
-cat << EOF | sudo sh -c 'cat > /etc/systemd/system/vhive@.service'
+    (cd "$ROOT"; go build)
+
+    vhive_bin="${ROOT}/vhive"
+
+    cat << EOF | sudo sh -c 'cat > /etc/systemd/system/vhive@.service'
 [Unit]
 Description=vhive runtime
 After=network.target local-fs.target firecracker-continerd
@@ -63,5 +67,6 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl daemon-reload
-sudo systemctl enable --now vhive\@nosnaps
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now vhive\@nosnaps
+fi
