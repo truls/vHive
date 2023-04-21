@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set -xeuo pipefail
+set -euo pipefail
 
 sudo apt-get update >> /dev/null
 
