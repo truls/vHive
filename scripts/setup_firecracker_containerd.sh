@@ -69,7 +69,7 @@ Description=firecracker-containerd runtime
 After=network.target local-fs.target containerd vhive-devmapper
 
 [Service]
-ExecStart=/usr/local/bin/firecracker-containerd
+ExecStart=/usr/local/bin/firecracker-containerd --config /etc/firecracker-containerd/config.toml
 
 Type=simple
 Delegate=yes
