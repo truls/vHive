@@ -25,30 +25,30 @@
 set -euxo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT="$( cd $DIR && cd .. && cd .. && pwd)"
+ROOT="$( cd "$DIR" && cd .. && cd .. && pwd)"
 
-STOCK_CONTAINERD=$1
+STOCK_CONTAINERD=${1:-}
 REPO_VOL_SIZE=5Gi
 
 # Install Calico network add-on
-kubectl apply -f $ROOT/configs/calico/canal.yaml
+kubectl apply -f "$ROOT/configs/calico/canal.yaml"
 
 # Install and configure MetalLB
 kubectl get configmap kube-proxy -n kube-system -o yaml | \
-sed -e "s/strictARP: false/strictARP: true/" | \
-kubectl apply -f - -n kube-system
+    sed -e "s/strictARP: false/strictARP: true/" | \
+    kubectl apply -f - -n kube-system
 
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.9/config/manifests/metallb-native.yaml
 kubectl -n metallb-system wait deploy controller --timeout=90s --for=condition=Available
-kubectl apply -f $ROOT/configs/metallb/metallb-ipaddresspool.yaml
-kubectl apply -f $ROOT/configs/metallb/metallb-l2advertisement.yaml
+kubectl apply -f "$ROOT/configs/metallb/metallb-ipaddresspool.yaml"
+kubectl apply -f "$ROOT/configs/metallb/metallb-l2advertisement.yaml"
 
 # istio
-cd $ROOT
+cd "$ROOT"
 curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.16.0 TARGET_ARCH=x86_64 sh -
 export PATH=$PATH:$ROOT/istio-1.16.0/bin
 sudo sh -c  "echo 'export PATH=\$PATH:$ROOT/istio-1.16.0/bin' >> /etc/profile"
-istioctl install -y -f $ROOT/configs/istio/istio-minimal-operator.yaml
+istioctl install -y -f "$ROOT/configs/istio/istio-minimal-operator.yaml"
 
 KNATIVE_VERSION="knative-v1.9.0"
 # Install Knative in the cluster
@@ -56,18 +56,18 @@ if [ "$STOCK_CONTAINERD" == "stock-only" ]; then
     kubectl apply --filename https://github.com/knative/serving/releases/download/$KNATIVE_VERSION/serving-crds.yaml
     kubectl apply --filename https://github.com/knative/serving/releases/download/$KNATIVE_VERSION/serving-core.yaml
 else
-    kubectl apply --filename $ROOT/configs/knative_yamls/serving-crds.yaml
-    kubectl apply --filename $ROOT/configs/knative_yamls/serving-core.yaml
+    kubectl apply --filename "$ROOT/configs/knative_yamls/serving-crds.yaml"
+    kubectl apply --filename "$ROOT/configs/knative_yamls/serving-core.yaml"
 fi
 
 # Install local cluster registry
 kubectl create namespace registry
-REPO_VOL_SIZE=$REPO_VOL_SIZE envsubst < $ROOT/configs/registry/repository-volume.yaml | kubectl create --filename -
-kubectl create --filename $ROOT/configs/registry/docker-registry.yaml
-kubectl apply --filename $ROOT/configs/registry/repository-update-hosts.yaml
+REPO_VOL_SIZE=$REPO_VOL_SIZE envsubst < "$ROOT/configs/registry/repository-volume.yaml" | kubectl create --filename -
+kubectl create --filename "$ROOT/configs/registry/docker-registry.yaml"
+kubectl apply --filename "$ROOT/configs/registry/repository-update-hosts.yaml"
 
 # magic DNS
-kubectl apply --filename $ROOT/configs/knative_yamls/serving-default-domain.yaml
+kubectl apply --filename "$ROOT/configs/knative_yamls/serving-default-domain.yaml"
 
 kubectl apply --filename https://github.com/knative/net-istio/releases/download/$KNATIVE_VERSION/net-istio.yaml
 
